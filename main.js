@@ -10,50 +10,54 @@ const gui = new GUI()
 const asperctRatio = innerWidth / innerHeight
 const textureLoader = new THREE.TextureLoader()
 
-const energy = textureLoader.load('static/textures/energy.png')
+// галактика
 
-// материал
-const patrclesGeometry = new THREE.BufferGeometry();
-const count = 1500
-
-const positions = new Float32Array(count * 3)
-const colors = new Float32Array(count * 3)
-
-for (let i = 0; i < count * 3; i++) {
-    colors[i] = Math.random()
-    positions[i] = (Math.random() - 0.5) * 10
+const parametrs = {
+    count: 3000,
+    size: 0.02,
 }
 
-patrclesGeometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(positions, 3)
-)
+let geometry, material, points = null
 
-patrclesGeometry.setAttribute(
-    'color',
-    new THREE.BufferAttribute(colors, 3)
-)
+const generatyGalaxy = () => {
 
-// частицы
-const patrclesMaterial = new THREE.PointsMaterial()
-patrclesMaterial.size = 0.5
-// patrclesMaterial.color = new THREE.Color('#b9d5ff')
-patrclesMaterial.sizeAttenuation = true
-patrclesMaterial.alphaMap = energy
-patrclesMaterial.transparent = true
-// patrclesMaterial.alphaTest = 0.001
-patrclesMaterial.depthWrite = false
-// patrclesMaterial.blending = THREE.AdditiveBlending
-patrclesMaterial.vertexColors = true
+    if (points !== null) {
+        geometry.dispose()
+        material.dispose()
+        scene.remove(points)
+    }
 
-const patrcles = new THREE.Points(patrclesGeometry, patrclesMaterial)
-scene.add(patrcles)
+    geometry = new THREE.BufferGeometry()
+    const positions = new Float32Array(parametrs.count * 3)
+    for (let i = 0; i < parametrs.count; i++) {
 
-const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial()
-)
-scene.add(cube)
+        const i3 = i * 3
+        positions[i3] = (Math.random() - 0.5) * 3
+        positions[i3 + 1] = (Math.random() - 0.5) * 3
+        positions[i3 + 2] = (Math.random() - 0.5) * 3
+    }
+
+    geometry.setAttribute('position', 
+        new THREE.BufferAttribute(positions, 3))
+
+    material = new THREE.PointsMaterial({
+        color: 'red',
+        size: parametrs.size,
+        opacity: 0.3,
+        sizeAttenuation: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    })
+    points = new THREE.Points(geometry, material)
+    scene.add(points)
+
+}
+
+generatyGalaxy() 
+
+gui.add(parametrs, 'count').min(100).max(10000).step(10).onFinishChange(generatyGalaxy)
+gui.add(parametrs, 'size').min(0.01).max(1.0).step(0.01).onFinishChange(generatyGalaxy)
+
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000000);
 
@@ -71,9 +75,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 
 
-camera.position.z = 4;
+camera.position.z = 2;
 camera.position.x = 0;
-camera.position.y = 1.5;
+camera.position.y = 2.5;
 
 controls.update();
 
@@ -119,15 +123,6 @@ function animate() {
     const elepsedTime = clock.getElapsedTime()
     
 
-    // patrcles.rotation.x = elepsedTime * 0.25
-    for (let i = 0; i < count; i++) {
-        const i3 = i * 3
-        const x = patrclesGeometry.attributes.position.array[i3]
-        patrclesGeometry.attributes.position.array[i3 + 1] = Math.sin(elepsedTime + x) 
-        
-    }
-
-    patrclesGeometry.attributes.position.needsUpdate = true
     renderer.render(scene, camera);
     controls.update();
     renderer.setSize(innerWidth, innerHeight);
