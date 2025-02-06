@@ -6,19 +6,48 @@
     <title>My first three.js app</title>
     <style>
         body {
-            background-color: #f0f0f0;
+            background-color: #1e1a20;
             color: #444;
-            /* margin: 0; */
-          
+            margin: 0;
+padding: 0;          
         }
     
         a {
             color: #08f;
         }
+
+
+        section {
+            display: flex;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #d36c6c;
+            text-transform: uppercase;
+            font-size: 7vmin;
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+     
+        .canvas{
+           position: fixed;
+            top: 0;
+            left: 0;
+            outline: none; 
+            z-index: -1;
+        }
+        
     </style>
 </head>
 
 <body>
+    <section>Contact my profile</section>
+    <section style="flex-direction: row-reverse;">Portfolio</section>
+    <section>About me</section>
+
+
+    <canvas class="canvas"></canvas>
     <script type="module" src="/main.js"></script>
 </body>
 
