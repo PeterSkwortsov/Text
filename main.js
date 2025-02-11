@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
 import GUI from 'lil-gui';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 const gui = new GUI()
 const debugObject = {}
@@ -10,22 +8,6 @@ const debugObject = {}
 
 const scene = new THREE.Scene();
 
-const gltfLoader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-
-dracoLoader.setDecoderPath('draco/');
-gltfLoader.setDRACOLoader(dracoLoader);
-
-let mixer = null
-
-gltfLoader.load('static/Fox/Fox.gltf', (gltf) => {
-    
-    mixer = new THREE.AnimationMixer(gltf.scene);
-    const action = mixer.clipAction(gltf.animations[1]).play();
-
-    gltf.scene.scale.set(0.02, 0.02, 0.02);
-    scene.add(gltf.scene)
-})
 
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 6;
@@ -55,7 +37,7 @@ pointLight.castShadow = true
 const planeMesh = new THREE.Mesh(plane, planeMaterial);
 planeMesh.rotation.x = Math.PI / 180 * -90
 planeMesh.receiveShadow = true
-scene.add(planeMesh);
+// scene.add(planeMesh);
 
 
 
@@ -70,8 +52,40 @@ const renderer = new THREE.WebGLRenderer({
 
 const objectToUpdate = []
 
+const object1 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 32, 32),
+    new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        wireframe: false
+    })
+)
+object1.position.x = -1
+object1.position.y = 1
 
+const object2 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 32, 32),
+    new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        wireframe: false
+    })
+)
+object2.position.x = 0
+object2.position.y = 1
+const object3 = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 32, 32),
+    new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        wireframe: false
+    })
+)
+object3.position.x = 1
+object3.position.y = 1
 
+scene.add(object1, object2, object3)
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+console.log(raycaster)
 
 
 
@@ -105,6 +119,27 @@ window.addEventListener('resize', () => {
 const tick = () => {    
     const elapsedTime = clock.getElapsedTime();
 
+    object1.position.y = (Math.sin(elapsedTime) * 0.3) * 1.5
+    object2.position.y = (Math.sin(elapsedTime) * 0.8) * 1.5
+    object3.position.y = (Math.sin(elapsedTime) * 1.0) * 1.5
+
+    const rayOrigin = new THREE.Vector3(-3, 0, 0);
+    const rayDirection = new THREE.Vector3(1, 0, 0);
+    rayDirection.normalize()
+
+    raycaster.set(rayOrigin, rayDirection);
+
+    const objectsToTest = [object1, object2, object3]
+    const intersects = raycaster.intersectObjects(objectsToTest);
+
+    for (const object of objectsToTest) {
+        object.material.color.set('white');
+    }  // изначально белые
+
+    for (const intersect of intersects) {
+        intersect.object.material.color.set('green');
+    } // если пересечение то зеленый
+
     renderer.render(scene, camera);
     window.requestAnimationFrame(tick);
 
@@ -115,9 +150,7 @@ const tick = () => {
     
     const deltaTime = elapsedTime - oldElapsedTime;
     oldElapsedTime = elapsedTime;
-
-    mixer.update(deltaTime)
-
+  
 
     controls.update();
 }
