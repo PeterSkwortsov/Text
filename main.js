@@ -41,9 +41,6 @@ planeMesh.receiveShadow = true
 
 
 
-
-
-
 const renderer = new THREE.WebGLRenderer({
     alpha: true,
     canvas: canvas,
@@ -85,8 +82,25 @@ scene.add(object1, object2, object3)
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-console.log(raycaster)
 
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / sizes.width) * 2 - 1;
+    mouse.y = -(event.clientY / sizes.height) * 2 + 1;
+})
+
+window.addEventListener('click', () => {
+    if (currentIntersect) {
+      if (currentIntersect.object === object1) {
+        console.log('object1');
+    }
+    if (currentIntersect.object === object2) {
+        console.log('object2');
+    }
+    if (currentIntersect.object === object3) {
+        console.log('object3');
+    }
+    }})
+    
 
 
 const sizes = {
@@ -106,6 +120,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 let oldElapsedTime = 0;
 
 const clock = new THREE.Clock();
+let currentIntersect = null
 
 window.addEventListener('resize', () => {
     sizes.width = window.innerWidth;
@@ -123,23 +138,38 @@ const tick = () => {
     object2.position.y = (Math.sin(elapsedTime) * 0.8) * 1.5
     object3.position.y = (Math.sin(elapsedTime) * 1.0) * 1.5
 
-    const rayOrigin = new THREE.Vector3(-3, 0, 0);
-    const rayDirection = new THREE.Vector3(1, 0, 0);
-    rayDirection.normalize()
+    raycaster.setFromCamera(mouse, camera);
 
-    raycaster.set(rayOrigin, rayDirection);
+    // const rayOrigin = new THREE.Vector3(-3, 0, 0);
+    // const rayDirection = new THREE.Vector3(1, 0, 0);
+    // rayDirection.normalize()
+
+    // raycaster.set(rayOrigin, rayDirection);
 
     const objectsToTest = [object1, object2, object3]
     const intersects = raycaster.intersectObjects(objectsToTest);
 
     for (const object of objectsToTest) {
-        object.material.color.set('white');
+        {
+            object.material.color.set('white');
+        }
     }  // изначально белые
 
     for (const intersect of intersects) {
         intersect.object.material.color.set('green');
     } // если пересечение то зеленый
 
+    if(intersects.length) {
+        if (currentIntersect === null) {
+        }
+        currentIntersect = intersects[0]
+    } 
+    else {
+        if (currentIntersect) {
+        }
+        currentIntersect = null
+    }
+   
     renderer.render(scene, camera);
     window.requestAnimationFrame(tick);
 
