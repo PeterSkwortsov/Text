@@ -1,13 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
 import GUI from 'lil-gui';
-
-const gui = new GUI()
-const debugObject = {}
-
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 const scene = new THREE.Scene();
-
 
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 6;
@@ -40,14 +37,12 @@ planeMesh.receiveShadow = true
 // scene.add(planeMesh);
 
 
-
 const renderer = new THREE.WebGLRenderer({
     alpha: true,
     canvas: canvas,
     
 });
 
-const objectToUpdate = []
 
 const object1 = new THREE.Mesh(
     new THREE.SphereGeometry(0.3, 32, 32),
@@ -81,26 +76,47 @@ object3.position.y = 1
 scene.add(object1, object2, object3)
 
 const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+const pointer = new THREE.Vector2();
 
-window.addEventListener('mousemove', (event) => {
-    mouse.x = (event.clientX / sizes.width) * 2 - 1;
-    mouse.y = -(event.clientY / sizes.height) * 2 + 1;
+
+// window.addEventListener('pointermove', (event) => {
+//     pointer.x = (event.clientX / sizes.width) * 2 - 1;
+//     pointer.y = -(event.clientY / sizes.height) * 2 + 1;
+// })
+
+const gltfLoader = new GLTFLoader();
+let model = null
+gltfLoader.load('static/Fox/Fox.gltf', (gltf) => {
+
+    model = gltf.scene
+    gltf.scene.scale.set(0.02, 0.02, 0.02);
+    model.position.set(0, -1, -2)
+    scene.add(model)
 })
 
+function onPointerMove(event) {
+
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    for (let i = 0; i < intersects.length; i++) {
+        intersects[i].object.scale.set(0.5, 0.5, 0.5)
+    }
+}
+
 window.addEventListener('click', () => {
-    if (currentIntersect) {
-      if (currentIntersect.object === object1) {
-        console.log('object1');
+    if (model) {
+    model.scale.set(0.03, 0.03, 0.03);
+    } else {
+        model.scale.set(0.01, 0.01, 0.01);
     }
-    if (currentIntersect.object === object2) {
-        console.log('object2');
-    }
-    if (currentIntersect.object === object3) {
-        console.log('object3');
-    }
-    }})
-    
+})
+
+
 
 
 const sizes = {
@@ -131,6 +147,11 @@ window.addEventListener('resize', () => {
     
 })
 
+
+
+
+
+
 const tick = () => {    
     const elapsedTime = clock.getElapsedTime();
 
@@ -138,40 +159,62 @@ const tick = () => {
     object2.position.y = (Math.sin(elapsedTime) * 0.8) * 1.5
     object3.position.y = (Math.sin(elapsedTime) * 1.0) * 1.5
 
-    raycaster.setFromCamera(mouse, camera);
+    window.addEventListener('mousemove', onPointerMove);
 
-    // const rayOrigin = new THREE.Vector3(-3, 0, 0);
-    // const rayDirection = new THREE.Vector3(1, 0, 0);
-    // rayDirection.normalize()
 
-    // raycaster.set(rayOrigin, rayDirection);
+    
 
-    const objectsToTest = [object1, object2, object3]
-    const intersects = raycaster.intersectObjects(objectsToTest);
+    raycaster.setFromCamera(pointer, camera);
 
-    for (const object of objectsToTest) {
-        {
-            object.material.color.set('white');
-        }
-    }  // изначально белые
+    // const objectsToTest = [object1, object2, object3]
+    // const intersects = raycaster.intersectObjects(objectsToTest);
 
-    for (const intersect of intersects) {
-        intersect.object.material.color.set('green');
-    } // если пересечение то зеленый
+    // for (const object of objectsToTest) {
+    //         object.material.color.set('white');
+    // }
 
-    if(intersects.length) {
-        if (currentIntersect === null) {
-        }
-        currentIntersect = intersects[0]
-    } 
-    else {
-        if (currentIntersect) {
-        }
-        currentIntersect = null
-    }
+
+    // for (const intersect of intersects) {
+    //     intersect.object.material.color.set('green');
+    //     // intersect.object.scale.set(0.2, 0.2, 0.2)
+    // }
+
+
+
+    // if(intersects.length) {
+    //     if (!currentIntersect) {
+    //         console.log('pointer enter')
+    //         intersects.forEach((intersect) => {
+    //             intersect.object.scale.set(0.2, 0.2, 0.2)
+    //         })
+
+    //     }
+    //     currentIntersect = intersects[0]
+    // } 
+    // else {
+    //     if (currentIntersect) {
+    //         console.log('pointer leave')
+    //         intersects.forEach((event) => {
+    //             event.object.reset()
+    //             event.object.scale.set(1.2, 1.2, 1.2)
+    //         })
+    //     }
+    //     currentIntersect = null
+    // }
+
+
+
+    // if (model) {
+    //     const modelIntersect = raycaster.intersectObject(model)
+    //     if (modelIntersect.length = 0) {
+    //         console.log('model intersect')
+    //     }
+    //     else {
+    //         '0'
+    //     }
+      
+    // }
    
-    renderer.render(scene, camera);
-    window.requestAnimationFrame(tick);
 
     camera.updateProjectionMatrix();
 
@@ -181,8 +224,11 @@ const tick = () => {
     const deltaTime = elapsedTime - oldElapsedTime;
     oldElapsedTime = elapsedTime;
   
-
+    // mixer.update(deltaTime)
     controls.update();
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(tick);
+
 }
 
 tick();
