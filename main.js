@@ -1,150 +1,85 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
-import GUI from 'lil-gui';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 
-const scene = new THREE.Scene();
+const scene = new THREE.Scene()
 
-const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 6;
-camera.position.y = 3;
+const gui = new GUI()
+const global = {}
 
-const canvas = document.querySelector('canvas');
+const cubeTextureLoader = new THREE.CubeTextureLoader()
 
-const plane = new THREE.PlaneGeometry(5,5) 
-const planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    side: THREE.DoubleSide,
-    wireframe: false
-})
+const environmentMap = cubeTextureLoader.load([
+    'static/textures/box/px.png',
+    'static/textures/box/nx.png',
+    'static/textures/box/py.png',
+    'static/textures/box/ny.png',
+    'static/textures/box/pz.png',
+    'static/textures/box/nz.png',
+])
 
-plane.receiveShadow = true
-plane.castShadow = true
-
-const light = new THREE.AmbientLight(0xffffff, 1);
-light.position.set(1, 1, 1);
-scene.add(light);
-
-const pointLight = new THREE.PointLight(0xffffff, 8);
-pointLight.position.set(0, 2, 2.5);
-scene.add(pointLight);
-pointLight.castShadow = true
-
-const planeMesh = new THREE.Mesh(plane, planeMaterial);
-planeMesh.rotation.x = Math.PI / 180 * -90
-planeMesh.receiveShadow = true
-// scene.add(planeMesh);
+scene.environment = environmentMap
+scene.background = environmentMap
 
 
-const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    canvas: canvas,
-    
-});
+const directionallight = new THREE.DirectionalLight(0xebfeff, Math.PI)
+directionallight.position.set(1, 0.1, 1)
+directionallight.visible = false
+scene.add(directionallight)
 
+const ambientLight = new THREE.AmbientLight(0xebfeff, Math.PI / 16)
+ambientLight.visible = false
+scene.add(ambientLight)
 
-const object1 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 32, 32),
-    new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        wireframe: false
-    })
-)
-object1.position.x = -1
-object1.position.y = 1
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100)
+camera.position.set(-1.1, 2.4, 1.3)
 
-const object2 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 32, 32),
-    new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        wireframe: false
-    })
-)
-object2.position.x = 0
-object2.position.y = 1
-const object3 = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 32, 32),
-    new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        wireframe: false
-    })
-)
-object3.position.x = 1
-object3.position.y = 1
-
-scene.add(object1, object2, object3)
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-
-// window.addEventListener('pointermove', (event) => {
-//     pointer.x = (event.clientX / sizes.width) * 2 - 1;
-//     pointer.y = -(event.clientY / sizes.height) * 2 + 1;
-// })
-
-const gltfLoader = new GLTFLoader();
-let model = null
-gltfLoader.load('static/Fox/Fox.gltf', (gltf) => {
-
-    model = gltf.scene
-    gltf.scene.scale.set(0.02, 0.02, 0.02);
-    model.position.set(0, -1, -2)
-    scene.add(model)
-})
-
-function onPointerMove(event) {
-
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(pointer, camera);
-
-    const intersects = raycaster.intersectObjects(scene.children);
-
-    for (let i = 0; i < intersects.length; i++) {
-        intersects[i].object.scale.set(0.5, 0.5, 0.5)
-    }
-}
-
-window.addEventListener('click', () => {
-    if (model) {
-    model.scale.set(0.03, 0.03, 0.03);
-    } else {
-        model.scale.set(0.01, 0.01, 0.01);
-    }
-})
-
-
-
-
-const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight
-}
-sizes.width = window.innerWidth;
-sizes.height = window.innerHeight;
-
-camera.aspect = sizes.width / sizes.height;
-
-
-renderer.shadowMap.enabled = true;
-renderer.setSize(window.innerWidth, window.innerHeight);
-const controls = new OrbitControls(camera, renderer.domElement);
-
-let oldElapsedTime = 0;
-
-const clock = new THREE.Clock();
-let currentIntersect = null
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
 
 window.addEventListener('resize', () => {
-    sizes.width = window.innerWidth;
-    sizes.height = window.innerHeight;
-    camera.aspect = sizes.width / sizes.height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(sizes.width, sizes.height);
-    
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+})
+
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.enableDamping = true
+
+
+
+const material = new THREE.MeshStandardMaterial()
+// material.envMapIntensity = 3
+// material.roughness = 0.17
+// material.metalness = 0.07
+// material.clearcoat = 0.43
+// material.iridescence = 1
+// material.transmission = 1
+// material.thickness = 5.12
+// material.ior = 1.78
+
+global.envMapIntensity = scene.environmentIntensity
+
+const updateAllMaterial = () => 
+    {
+    scene.traverse((child) => 
+        {
+        if (child.isMesh && child.material.isMeshStandardMaterial) 
+            {
+            child.material.environmentIntensity = global.environmentIntensity
+            child.scale.set(2, 2, 2)
+        }
+    })
+}
+
+scene.environmentIntensity = 5
+
+new GLTFLoader().load('static/fly/flyModel/FlightHelmet.gltf', (gltf) => {
+    scene.add(gltf.scene)
+    updateAllMaterial()
 })
 
 
@@ -152,83 +87,26 @@ window.addEventListener('resize', () => {
 
 
 
-const tick = () => {    
-    const elapsedTime = clock.getElapsedTime();
+gui.add(scene, 'environmentIntensity').min(0).max(5).step(0.01)
 
-    object1.position.y = (Math.sin(elapsedTime) * 0.3) * 1.5
-    object2.position.y = (Math.sin(elapsedTime) * 0.8) * 1.5
-    object3.position.y = (Math.sin(elapsedTime) * 1.0) * 1.5
+gui.add(renderer, 'toneMappingExposure').min(0).max(5).step(0.01)
 
-    window.addEventListener('mousemove', onPointerMove);
+    gui.add(global, 'envMapIntensity')
+    .min(0)
+    .max(5)
+    .step(0.01)
+    .onChange(updateAllMaterial)
 
-
-    
-
-    raycaster.setFromCamera(pointer, camera);
-
-    // const objectsToTest = [object1, object2, object3]
-    // const intersects = raycaster.intersectObjects(objectsToTest);
-
-    // for (const object of objectsToTest) {
-    //         object.material.color.set('white');
-    // }
+gui.add(scene, 'backgroundBlurriness').min(0).max(2).step(0.01)
 
 
-    // for (const intersect of intersects) {
-    //     intersect.object.material.color.set('green');
-    //     // intersect.object.scale.set(0.2, 0.2, 0.2)
-    // }
+function animate() {
+    requestAnimationFrame(animate)
 
+    controls.update()
 
-
-    // if(intersects.length) {
-    //     if (!currentIntersect) {
-    //         console.log('pointer enter')
-    //         intersects.forEach((intersect) => {
-    //             intersect.object.scale.set(0.2, 0.2, 0.2)
-    //         })
-
-    //     }
-    //     currentIntersect = intersects[0]
-    // } 
-    // else {
-    //     if (currentIntersect) {
-    //         console.log('pointer leave')
-    //         intersects.forEach((event) => {
-    //             event.object.reset()
-    //             event.object.scale.set(1.2, 1.2, 1.2)
-    //         })
-    //     }
-    //     currentIntersect = null
-    // }
-
-
-
-    // if (model) {
-    //     const modelIntersect = raycaster.intersectObject(model)
-    //     if (modelIntersect.length = 0) {
-    //         console.log('model intersect')
-    //     }
-    //     else {
-    //         '0'
-    //     }
-      
-    // }
-   
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
-    const deltaTime = elapsedTime - oldElapsedTime;
-    oldElapsedTime = elapsedTime;
-  
-    // mixer.update(deltaTime)
-    controls.update();
-    renderer.render(scene, camera);
-    window.requestAnimationFrame(tick);
+    renderer.render(scene, camera)
 
 }
 
-tick();
+animate()
