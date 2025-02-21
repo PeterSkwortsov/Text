@@ -26,7 +26,7 @@ const rgbeLoader = new RGBELoader()
 // scene.environment = environmentMap
 // scene.background = environmentMap
 
-rgbeLoader.load('static/textures/box/brown_photostudio_01_2k.hdr', (environmentMap) => {
+rgbeLoader.load('static/my-hdri-cart.hdr', (environmentMap) => {
     environmentMap.mapping = THREE.EquirectangularReflectionMapping
     scene.background = environmentMap
 })
