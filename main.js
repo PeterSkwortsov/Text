@@ -26,9 +26,10 @@ const rgbeLoader = new RGBELoader()
 // scene.environment = environmentMap
 // scene.background = environmentMap
 
-rgbeLoader.load('static/my-hdri-cart.hdr', (environmentMap) => {
+rgbeLoader.load('static/my-hdri-cart2.hdr', (environmentMap) => {
     environmentMap.mapping = THREE.EquirectangularReflectionMapping
     scene.background = environmentMap
+    scene.environment = environmentMap
 })
 
 // const directionallight = new THREE.DirectionalLight(0xebfeff, Math.PI)
