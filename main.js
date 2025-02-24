@@ -15,10 +15,10 @@ const gui = new GUI()
 const global = {}
 
 
-rgbeLoader.load('static/textures/box/brown_photostudio_01_2k.hdr', (environmentMap) => {
-    environmentMap.mapping = THREE.EquirectangularReflectionMapping
-    scene.background = environmentMap
-})
+// rgbeLoader.load('static/textures/box/brown_photostudio_01_2k.hdr', (environmentMap) => {
+//     environmentMap.mapping = THREE.EquirectangularReflectionMapping
+//     scene.background = environmentMap
+// })
 
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
@@ -57,74 +57,74 @@ global.envMapIntensity = scene.environmentIntensity
 
 scene.environmentIntensity = 5
 
-new GLTFLoader().load('public/burger.glb', (gltf) => {
+let mixer = null
+
+
+new GLTFLoader().load('static/Fox/Fox.gltf', (gltf) => {
     scene.add(gltf.scene)
-    gltf.scene.position.set(0, -3.2, 1)
-    // updateAllMaterial()
-    // gltf.scene.scale.set(10, 10, 10)
+    gltf.scene.position.set(0, -2, 0)
+    updateAllMaterial()
+    gltf.scene.scale.set(0.05, 0.05, 0.05)
+
+    mixer = new THREE.AnimationMixer(gltf.scene);
+    const action = mixer.clipAction(gltf.animations[0]).play();
+    
 })
 
 
-const floorColorTexture = textureLoader.load('static/textures/energy.png')
-const floorNormalTexture = textureLoader.load('static/textures/floor/weathered_brown_planks_disp_1k.png')
-const floorAOTexture = textureLoader.load('static/textures/floor/weathered_brown_planks_ao_1k.jpg')
-const floorRougnessTexture = textureLoader.load('static/textures/floor/weathered_brown_planks_arm_1k.jpg')
-
-const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(20, 20),
-    new THREE.MeshStandardMaterial({
-        map: floorColorTexture,
-        normalMap: floorNormalTexture,
-        aoMap: floorAOTexture,
-        roughnessMap: floorRougnessTexture
-    })
-)
-floor.rotation.x = -Math.PI * 0.5
-floor.position.y = -2
-floor.receiveShadow = true
-scene.add(floor)
-
-floorColorTexture.colorSpace = THREE.SRGBColorSpace // улучшает цветопередачу
 
 
-const floorColorTextureWoll = textureLoader.load('static/textures/energy.png')
-const floorNormalTextureWoll = textureLoader.load('static/textures/brick/castle_brick_07_rough_1k.jpg')
-const floorAOTextureWoll = textureLoader.load('static/textures/brick/castle_brick_07_disp_1k.png')
-const floorMetalnesWooll = textureLoader.load('static/textures/brick/castle_brick_07_disp_1k.png')
+const floorColorTextureWoll = textureLoader.load('static/textures/floor/rocky_terrain_diff_1k.jpg')
+const floorNormalTextureWoll = textureLoader.load('static/textures/floor/rocky_terrain_nor_dx_1k.jpg')
+const floorAOTextureWoll = textureLoader.load('static/textures/floor/rocky_terrain_ao_1k.jpg')
+const floorRoughtnessWooll = textureLoader.load('D:/JAVA/Text/static/textures/floor/rocky_terrain_rough_1k.jpg')
+const floorDispWoll = textureLoader.load('D:/JAVA/Text/static/textures/floor/rocky_terrain_disp_1k.jpg')
 
-floorColorTextureWoll.colorSpace = THREE.SRGBColorSpace
 
 
 
 const floorWoll = new THREE.Mesh(
-    new THREE.PlaneGeometry(20, 10),
+    new THREE.PlaneGeometry(20, 20),
     new THREE.MeshStandardMaterial({
         map: floorColorTextureWoll,
         displacementMap: floorAOTextureWoll,
         roughness: floorNormalTextureWoll,
-        aoMap: floorAOTextureWoll
+        aoMap: floorAOTextureWoll,
+        roughnessMap: floorRoughtnessWooll,
+        displacementScale: 0.1
     })
 )
 
-floorWoll.position.set(0,2,-3.5)
+floorWoll.colorSpace = THREE.SRGBColorSpace
+
+
+floorWoll.rotation.x = -Math.PI * 0.5
+floorWoll.position.y = -2
+floorWoll.receiveShadow = true
 scene.add(floorWoll)
 
 
-const directionallight = new THREE.DirectionalLight(0xffffff, 8)
-directionallight.position.set(5, 0.1, 1)
-directionallight.visible = true
-scene.add(directionallight)
-// const directionallightHelper = new THREE.DirectionalLightHelper(directionallight, 5)
-// scene.add(directionallightHelper)
+const spotLight = new THREE.SpotLight(0xffffff)
+spotLight.intensity = 30
+spotLight.angle = 5.67
+spotLight.decay = 1.25
+spotLight.position.set(1.5, 9, 2); 
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1)
-scene.add(ambientLight)
 
-gui.add(directionallight, 'intensity').min(0).max(10).step(0.01)    
-gui.add(directionallight.position, 'x').min(0).max(10).step(0.01)
-gui.add(directionallight.position, 'y').min(0).max(10).step(0.01)
-gui.add(directionallight.position, 'z').min(0).max(10).step(0.01)
+spotLight.visible = true
+scene.add(spotLight)
 
+
+
+
+
+gui.add(spotLight, 'intensity').min(0).max(10).step(0.01)    
+gui.add(spotLight.position, 'x').min(0).max(10).step(0.01)
+gui.add(spotLight.position, 'y').min(0).max(10).step(0.01)
+gui.add(spotLight.position, 'z').min(0).max(10).step(0.01)
+gui.add(spotLight, 'distance').min(0).max(10).step(0.01)
+gui.add(spotLight, 'angle').min(0).max(10).step(0.01)
+gui.add(spotLight, 'decay').min(0).max(10).step(0.01)
 
 gui.add(scene, 'environmentIntensity').min(0).max(10).step(0.01)
 
@@ -148,30 +148,39 @@ gui.add(renderer, 'toneMapping', {
 
 gui.add(renderer, 'toneMappingExposure').min(0).max(10).step(0.01)
 
-directionallight.castShadow = true
-gui.add(directionallight, 'castShadow')
-directionallight.shadow.camera.far = 15
-directionallight.shadow.mapSize.set(512, 512) // чем меньше разрешение (число) тем больше размытость, например 1024, 512, 256
-directionallight.shadow.normalBias = 0.05
+spotLight.castShadow = true
+gui.add(spotLight, 'castShadow')
+spotLight.shadow.camera.far = 15
+spotLight.shadow.mapSize.set(512, 512) // чем меньше разрешение (число) тем больше размытость, например 1024, 512, 256
+spotLight.shadow.normalBias = 0.05
 
 // const directionallightShadowHelper = new THREE.CameraHelper(directionallight.shadow.camera)
 // scene.add(directionallightShadowHelper)
 
-directionallight.target.position.set(0, 4, 0)
-directionallight.target.updateMatrix()
+spotLight.target.position.set(0, 4, 0)
+spotLight.target.updateMatrix()
+
 
 
 
 
 const clock = new THREE.Clock()
+let oldElapsedTime = 0
 function animate() {
     const elapsedTime = clock.getElapsedTime()
 
 
-    controls.update()
     renderer.render(scene, camera)
     requestAnimationFrame(animate)
-    updateAllMaterial()
+
+    const deltaTime = elapsedTime - oldElapsedTime
+    oldElapsedTime = elapsedTime
+
+    mixer.update(deltaTime)
+
+    // updateAllMaterial()
+    controls.update()
+
 }
 
 
