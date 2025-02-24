@@ -114,7 +114,7 @@ gui.add(renderer, 'toneMappingExposure').min(0).max(5).step(0.01)
 
     gui.add(global, 'envMapIntensity')
     .min(0)
-    .max(5)
+    .max(10)
     .step(0.01)
     .onChange(updateAllMaterial)
 
