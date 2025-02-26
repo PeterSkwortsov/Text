@@ -25,5 +25,10 @@ export default [
         type: 'texture',
         path: 'static/textures/floor/rocky_terrain_nor_gl_1k.jpg'
     },
+    {
+        name: 'foxModel',
+        type: 'gltfModel',
+        path: 'static/Fox/Fox.gltf'
+    }
 
 ]

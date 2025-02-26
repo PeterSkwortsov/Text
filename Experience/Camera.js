@@ -26,7 +26,7 @@ export default class Camra
             this.sizes.width / this.sizes.height, 
             0.1, 
             100)
-        this.instance.position.set(1,2,1)
+        this.instance.position.set(1,2,3)
         this.scene.add(this.instance)
     }
 
